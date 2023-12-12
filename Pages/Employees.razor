@@ -1,0 +1,88 @@
+﻿@page "/songs"
+@using BlazorApp1.Data;
+@using BlazorApp1.Services;
+@inject EmployeesServicecs songService
+<h1>My Song List</h1>
+<p>This component demonstrates managing a Song list.</p>
+@if (em == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <button @onclick="@Add" class="btn btn-success">Add</button>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Fullname</th>
+                <th>Department</th>
+                <th>Salary</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in em)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.FullName</td>
+                    <td>@item.Department</td>
+                    <td>@item.Salary</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@if (em != null && mode == MODE.Add)
+{
+    <input placeholder="Fullname" @bind="@Fullname" />
+    <br />
+    <input placeholder="Department" @bind="@Department" />
+    <br />
+    <input placeholder="Salary" @bind="@Salary" />
+    <br />
+    <button @onclick="@Insert" class="btn btn-warning">Insert</button>
+}
+@code {
+    string id;
+    string Fullname;
+    string Department;
+    string Salary;
+    private enum MODE { None, Add, EditDelete };
+    MODE mode = MODE.None;
+    List<Employee> em;
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+    protected async Task Load()
+    {
+        em = await songService.GetEmployeesAsync();
+    }
+    protected void ClearFields()
+    {
+        id = string.Empty;
+        Fullname = string.Empty;
+        Department = string.Empty;
+        Salary = string.Empty;
+    }
+    protected void Add()
+    {
+        ClearFields();
+        mode = MODE.Add;
+    }
+    protected async Task Insert()
+    {
+        Employee em = new Employee()
+        {
+                Id = Guid.NewGuid().ToString(),
+                FullName = Fullname,
+                Department = Department,
+                Salary = Salary
+            };
+        await songService.InsertEmployeeAsync(em);
+        ClearFields();
+        await Load();
+        mode = MODE.None;
+    }
+}
